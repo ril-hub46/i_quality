@@ -3,5 +3,4 @@
 .RData
 .Ruserdata
 renv/
-rapport/Rapport.pdf
 data/raw/Data.xlsx
