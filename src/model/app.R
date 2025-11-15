@@ -1,97 +1,118 @@
-library(shiny)
-library(readxl)
-library(dplyr)
-library(AER)
-library(modelsummary)
-library(gt)
-
+#library(shiny)
+#library(readxl)
+#library(dplyr)
+#library(AER)
+#library(stargazer)
+#library(gt)
+#library(ggrepel)
+#library(ggplot2)
+source("global.R")
 ui <- fluidPage(
-
-  titlePanel("Résulats de l'étude d'Acemoglu"),
+  
+  titlePanel("Réplication de l'étude d'Acemoglu, Johnson et Robinson"),
   
   sidebarLayout(
     
     sidebarPanel(
-      h3("Contrôles"),
-      p("Utilisez ce menu pour sélectionner les résulats de la table de régression que vous souhaitez afficher."),
+      h3("Table de regression"),
       
       selectInput("table_choice", 
                   label = "Choisir la table à afficher:",
                   choices = c(
-                    "Table 4 IV-Regression of log gdp per capita",
-                    "Table OLS 1995",
-                    "Table First Stage 1995",
-                    "Panel A: Two-Stage Least Squares 1995",
-                    "Extension Rapport 2019",
-                    "Table OLS 2019",
-                    "Table 2SLS (IV) 2019"
+                    "Table 4 - 2SLS",
+                    "Table 4 - First Stage",
+                    "Table 4 - Ordinary LS",
+                    "Table 4 - 2SLS 2019",
+                    "Table 4 - Ordinary LS 2019"
+
                   ),
-                  selected = "Table 2SLS 1995")
+                  selected = "OLS 1995 - Colonne 1")
     ),
     
-
     mainPanel(
-      h2("Résultats de la régression"),
-      p("Le tableau ci-dessous recrée le style de l'article (coefficients, erreurs-types entre parenthèses, et étoiles)."),
       
-      gt::gt_output(outputId = "model_table")
+
+      tabsetPanel(
+        
+        tabPanel("Tables de Régression", 
+                 h2("Résultats de la régression"),
+                 verbatimTextOutput(outputId = "model_table_output")
+        ),
+
+        tabPanel("Figure 2",
+                 h2("OLS"),
+                 plotOutput(outputId = "plot_ols_output")
+        )
+      )
     )
   )
 )
 
 server <- function(input, output, session) {
   
-  list_ols_1995 <- list(
-    "(1)" = ols_c1, "(2)" = ols_c2, "(3)" = ols_c3, "(4)" = ols_c4,
-    "(5)" = ols_c5, "(6)" = ols_c6, "(7)" = ols_c7, "(8)" = ols_c8,
-    "(9)" = ols_c9
-  )
-  
-  list_fs_1995 <- list(
-    "(1)" = fs_b1, "(2)" = fs_b2, "(3)" = fs_b3, "(4)" = fs_b4,
-    "(5)" = fs_b5, "(6)" = fs_b6, "(7)" = fs_b7, "(8)" = fs_b8,
-    "(9)" = fs_b9
-  )
-  
-  list_iv_1995 <- list(
-    "Base_sample (1)" = iv_a1, "Base_sample (2)" = iv_a2, "Basesample without Neo-Europes (3)" = iv_a3, "Basesample without Neo-Europes (4)" = iv_a4,
-    "Base sample without Africa (5)" = iv_a5, "Base sample without Africa (6)" = iv_a6, "Base sample with continent dummies (7)" = iv_a7, "Base sample with continent dummies (8)" = iv_a8,
-    "Base sample, dependent variableis logoutput perworker (9)" = iv_a9
-  )
-  
-  # Listes pour 2019
-  list_ols_2019 <- list(
-    "(1)" = ols_2019_1, "(2)" = ols_2019_2, "(3)" = ols_2019_3, "(4)" = ols_2019_4,
-    "(5)" = ols_2019_5, "(6)" = ols_2019_6, "(7)" = ols_2019_7, "(8)" = ols_2019_8,
-    "(9)" = ols_2019_9
-  )
-  
-  list_iv_2019 <- list(
-    "(1)" = iv_2019_1, "(2)" = iv_2019_2, "(3)" = iv_2019_3, "(4)" = iv_2019_4,
-    "(5)" = iv_2019_5, "(6)" = iv_2019_6, "(7)" = iv_2019_7, "(8)" = iv_2019_8,
-    "(9)" = iv_2019_9
-  )
-  
-  output$model_table <- gt::render_gt({
+  output$model_table_output <- renderPrint({
+    if (input$table_choice == "Table 4 - 2SLS") {
+      
+      stargazer(iv_a1, iv_a2, iv_a3, iv_a4, iv_a5, iv_a6, iv_a7, iv_a8,
+                column.labels = c('Base sample', 'Base sample', 'Base sample without neo europes', 'Base sample without neo europes', 'base sample without africa',
+                                  'base sample without africa', 'base sample without africa', 'base sample other regions dummy', 'base sample other regions dummy'),
+                type = "text",
+                title = "2SLS - IV REGRESSIONS OF LOG GDP PER CAPITA",
+                align = TRUE,
+                df = FALSE,
+                omit.stat = c("ser", "f"),
+                omit = c("Constant"))
+    } 
     
-    table_to_show <- switch(input$table_choice,
-                            "Table OLS 1995 (Panel C)" = list_ols_1995,
-                            "Table First Stage 1995 (Panel B)" = list_fs_1995,
-                            "Table 2SLS (IV) 1995 (Panel A)" = list_iv_1995,
-                            "Table OLS 2019" = list_ols_2019,
-                            "Table 2SLS (IV) 2019" = list_iv_2019,
-                            list_iv_1995
-    )
-    dynamic_title <- input$table_choice
 
-    modelsummary(
-      table_to_show,
-      output = "gt",
-      stars = TRUE,
-      statistic = "std.error",
-      gof_map = c("nobs", "r.squared"),
-      title = dynamic_title
-    ) 
+    else if (input$table_choice == "Table 4 - First Stage") {
+      
+      stargazer(fs_b1, fs_b2, fs_b3, fs_b4, fs_b5, fs_b6, fs_b7, fs_b8,
+                type = "text", 
+                title = "First Stage for Average Protection Against Expropriation Risk in 1985-1995",
+                align = TRUE,
+                df = FALSE,
+                omit.stat = c("ser", "f"),
+                omit = c("Constant"))
+    }
+    
+    else if (input$table_choice == "Table 4 - Ordinary LS") {
+      
+      stargazer(ols_c1, ols_c2, ols_c3, ols_c4, ols_c5, ols_c6, ols_c7,
+                type = "text", 
+                title = "Ordinary Least Square",
+                align = TRUE,
+                df = FALSE,
+                omit.stat = c("ser", "f"),
+                omit = c("Constant"))
+    }
+    else if (input$table_choice == "Table 4 - 2SLS 2019") {
+      
+      stargazer(iv_2019_1,iv_2019_2, iv_2019_3, iv_2019_4, iv_2019_5, iv_2019_6,
+                type = "text", 
+                title = "2SLS - IV REGRESSIONS OF LOG GDP PER CAPITA 2019",
+                align = TRUE,
+                df = FALSE,
+                omit.stat = c("ser", "f"),
+                omit = c("Constant"))      
+    }
+
+    else if (input$table_choice == "Table 4 - Ordinary LS 2019") {
+      
+      stargazer(ols_2019_1, ols_2019_2, ols_2019_3, ols_2019_4, ols_2019_5,
+                type = "text", 
+                title = "Ordinary Least Square 2019",
+                align = TRUE,
+                df = FALSE,
+                omit.stat = c("ser", "f"),
+                omit = c("Constant"))
+    }
+    
   })
+output$plot_ols_output <- renderPlot({
+  print(graphique_ols)
+  
+})
 }
+
 shinyApp(ui = ui, server = server)
