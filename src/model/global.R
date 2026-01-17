@@ -2,17 +2,20 @@ library(shiny)
 library(readxl)
 library(dplyr)
 library(AER)
+library(here)
 library(stargazer)
 library(gt)
 library(ggrepel)
 library(ggplot2)
-data <- read_excel("C:/Users/RiL/Desktop/Prog/Institutions_quality/data/processed/data.xlsx")
+library(here)
+
+data <- read_excel(here("data", "processed", "Data.xlsx"))
 data <- as.data.frame(data)
 
 # Conversion
-data = data %>% mutate(
+data <- data %>% mutate(
   `Main mortality estimate` = as.numeric(`Main mortality estimate`),
-  Latitude = as.numeric(Latitude)
+  Latitude <- as.numeric(Latitude)
 )
 
 data$`Main mortality estimate` = log(data$`Main mortality estimate`)
@@ -32,8 +35,9 @@ gdp_2019 <- c(
   2947.126953, 2273.815278, 26641.38916, 12314.08594, 2444.248287, 25548.06338,
   65548.07078, 7046.0, 11190.1519, 1206.798113
 )
-data = cbind(data, gdp_2019)
+data <- cbind(data, gdp_2019)
 data$gdp_2019 <- log(data$gdp_2019) 
+data$Latitude <- as.numeric(data$Latitude)
 
 data <- data %>%
   mutate(
