@@ -1,12 +1,9 @@
-#library(shiny)
-#library(readxl)
-#library(dplyr)
-#library(AER)
-#library(stargazer)
-#library(gt)
-#library(ggrepel)
-#library(ggplot2)
-source("global.R")
+library(shiny)
+library(here)
+
+
+
+source(here("src", "model", "global.R"))
 ui <- fluidPage(
   
   titlePanel("Réplication de l'étude d'Acemoglu, Johnson et Robinson"),
